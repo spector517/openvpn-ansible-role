@@ -17,7 +17,7 @@ openvpn_clients:
 - name: client0
 
 # Server for you CA-server (May be the same as ovpn-server, but that is not safe!)
-openvpn_ca_host: you-ca-server.com # !!! Must be in inventory
+openvpn_ca_host: localhost # !!! Must be in inventory
 
 # TLS configuration
 # CA-storage location
