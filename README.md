@@ -16,8 +16,15 @@ WARNING
 All generated TLS-keys in easyrsa folder has no password.
 Do not use this solution for critical systems.
 
+Bugs
+----
+
+Now only localhost may be used as CA-server
+Removal clients temporary not supported
+
 Tags
 ----
+
 Use this tags for limit role functionality:
 - "__ovpn-ca__" - generate the easyrsa folder (if not exists)
 - "__ovpn-clients__" - generate the clients configs files. You can use that if you want to add new clients for your server (Existing configs will no be overwritten)
@@ -100,6 +107,7 @@ localhost ansible_connection=local
 
 Usage
 -----
+
 - Download the client app from [here](https://openvpn.net/community-downloads/)
 - Import the ovpn-config file in the client app
 - Connect to OpenVPN server using client config
