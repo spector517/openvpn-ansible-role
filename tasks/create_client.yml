@@ -42,4 +42,4 @@
     - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
 
-  tags: clients
+  tags: ovpn-clients

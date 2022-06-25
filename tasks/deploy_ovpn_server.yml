@@ -131,4 +131,4 @@
       state: reloaded
     when: openvpn_use_ufw
 
-  tags: server
+  tags: ovpn-server

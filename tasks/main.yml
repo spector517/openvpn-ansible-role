@@ -4,13 +4,13 @@
   register: easyrsa_stat_info
   delegate_to: '{{ openvpn_ca_host }}'
   run_once: true
-  tags: ca
+  tags: ovpn-ca
 
 - name: Create PKI, CA, servers's key/cert pair and OpenVPN ta.key
   include_tasks: generate_easyrsa.yml
   when: not easyrsa_stat_info.stat.exists
   run_once: true
-  tags: ca
+  tags: ovpn-ca
 
 - name: Create OpenVPN clients
   include_tasks: create_client.yml
@@ -19,8 +19,8 @@
   loop: '{{ openvpn_clients }}'
   loop_control:
     label: '{{ item.name }}'
-  tags: clients
+  tags: ovpn-clients
 
 - name: Deploy OpenVPN server
   include_tasks: deploy_ovpn_server.yml
-  tags: server
+  tags: ovpn-server
