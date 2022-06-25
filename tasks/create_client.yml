@@ -1,0 +1,45 @@
+- block:
+  - name: Ensure clients directory is present
+    file:
+      path: '{{ openvpn_clients_path }}'
+      state: directory
+    delegate_to: '{{ openvpn_ca_host }}'
+    run_once: true
+
+  - name: '{{ client_name }} >> Check if already exists'
+    stat:
+      path: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
+    register: client_stat_info
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: '{{ client_name }} >> Generate client key/cert pair'
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: './easyrsa build-client-full {{ client_name }} nopass'
+    when: 
+    - not client_stat_info.stat.exists
+    - not ansible_check_mode
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: '{{ client_name }} >> Read CA cert, client cert, client key and TA key'
+    set_fact:
+      ca_cert_value: "{{ lookup('file', openvpn_easy_rsa_path + '/pki/ca.crt') }}"
+      client_cert_value: "{{ lookup('file', openvpn_easy_rsa_path + '/pki/issued/' + client_name + '.crt') }}"
+      client_key_value: "{{ lookup('file', openvpn_easy_rsa_path + '/pki/private/' + client_name + '.key') }}"
+      ta_key_value: "{{ lookup('file', openvpn_easy_rsa_path + '/ta.key') }}"
+    when: 
+    - not client_stat_info.stat.exists
+    - not ansible_check_mode
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: '{{ client_name }} >> Create OpenVPN client config file'
+    template:
+      src: client_conf.j2
+      dest: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
+      mode: '0600'
+    when: 
+    - not client_stat_info.stat.exists
+    - not ansible_check_mode
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  tags: clients

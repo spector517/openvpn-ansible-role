@@ -1,0 +1,134 @@
+- block:
+  - name: Create system group
+    group:
+      name: openvpn
+      state: present
+
+  - name: Create system user
+    user:
+      name: openvpn
+      group: openvpn
+      system: true
+      create_home: false
+      shell: /sbin/nologin
+      state: present
+
+  - name: Install OpenVPN package
+    apt:
+      name: openvpn
+      state: latest
+      update_cache: true
+
+  - name: Copy OpenVPN server's files
+    copy:
+      src: '{{ item }}'
+      dest: /etc/openvpn/server/
+      owner: openvpn
+      group: openvpn
+      mode: '0644'
+    loop:
+    - '{{ openvpn_easy_rsa_path }}/pki/issued/{{ openvpn_server_cn }}.crt'
+    - '{{ openvpn_easy_rsa_path }}/pki/ca.crt'
+    - '{{ openvpn_easy_rsa_path }}/ta.key'
+    - '{{ openvpn_easy_rsa_path }}/pki/crl.pem'
+    when: not ansible_check_mode
+
+  - name: Copy OpenVPN server's config
+    template:
+      src: server_conf.j2
+      dest: /etc/openvpn/server/server.conf
+      owner: openvpn
+      group: openvpn
+      mode: '0644'
+
+  - name: Copy server key
+    copy:
+      src: '{{ openvpn_easy_rsa_path }}/pki/private/{{ openvpn_server_cn }}.key'
+      dest: /etc/openvpn/server/
+      owner: openvpn
+      group: openvpn
+      mode: '0400'
+    when: not ansible_check_mode
+
+  - name: Edit sysctl.conf (ip forwarding)
+    lineinfile:
+      path: /etc/sysctl.conf
+      line: net.ipv4.ip_forward = 1
+    register: sysctl_conf_change_info
+
+  - name: Apply sysctl.conf configuration
+    shell: sysctl -p
+    changed_when: sysctl_conf_change_info.changed
+
+  - name: Edit default forward policy
+    lineinfile:
+      path: /etc/default/ufw
+      regexp: '^DEFAULT_FORWARD_POLICY=.+'
+      line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+    when: openvpn_use_ufw
+
+  - name: Backup UFW before.rules
+    copy:
+      src: /etc/ufw/before.rules
+      dest: /etc/ufw/before.rules.bak
+      remote_src: true
+    when: openvpn_use_ufw
+
+  - name: Check UFW before.rules
+    shell:
+      cmd: cat /etc/ufw/before.rules
+    register: ufw_rules_before_info
+    check_mode: false
+    changed_when: false
+
+  - name: Inject OpenVPN rule to ufw
+    lineinfile:
+      path: /etc/ufw/before.rules
+      line: "{{ lookup('file', 'ufw_rules_before.rules') | replace('$ansible_default_ipv4.interface', ansible_default_ipv4.interface) }}"
+      insertbefore: BOF
+      state: present
+    when:
+    - ('4df7f0a349330e9d68210f3a0c29649e242b206275a47201c824bf0307dfb230' not in ufw_rules_before_info.stdout)
+    - openvpn_use_ufw
+
+  - name: Restart OpenVPN server
+    systemd:
+      service: openvpn-server@server
+      state: restarted
+      enabled: true
+    when: not ansible_check_mode
+
+  - name: Wait 5 seconds
+    pause:
+      seconds: 5
+
+  - name: Check openvpn-server status
+    shell:
+      cmd: systemctl status openvpn-server@server.service
+    register: service_info
+    failed_when:
+    - ('active' not in service_info.stdout)
+    changed_when: false
+
+  - name: Add SSH rule of Uncomplicated Firewall
+    ufw:
+      rule: allow
+      port: '{{ ansible_port }}'
+      protocol: tcp
+      state: enabled
+    when: openvpn_use_ufw
+
+  - name: Add OpenVPN rule of Uncomplicated Firewall
+    ufw:
+      rule: allow
+      port: '{{ openvpn_port }}'
+      protocol: '{{ openvpn_protocol }}'
+      state: enabled
+    when: openvpn_use_ufw
+
+  - name: Reload Uncomplicated Firewall
+    ufw:
+      state: reloaded
+    when: openvpn_use_ufw
+
+  tags: server

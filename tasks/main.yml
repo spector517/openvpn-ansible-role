@@ -1,0 +1,26 @@
+- name: Check Easy RSA folder status
+  stat:
+    path: '{{ openvpn_easy_rsa_path }}'
+  register: easyrsa_stat_info
+  delegate_to: '{{ openvpn_ca_host }}'
+  run_once: true
+  tags: ca
+
+- name: Create PKI, CA, servers's key/cert pair and OpenVPN ta.key
+  include_tasks: generate_easyrsa.yml
+  when: not easyrsa_stat_info.stat.exists
+  run_once: true
+  tags: ca
+
+- name: Create OpenVPN clients
+  include_tasks: create_client.yml
+  vars:
+    client_name: '{{ item.name }}'
+  loop: '{{ openvpn_clients }}'
+  loop_control:
+    label: '{{ item.name }}'
+  tags: clients
+
+- name: Deploy OpenVPN server
+  include_tasks: deploy_ovpn_server.yml
+  tags: server

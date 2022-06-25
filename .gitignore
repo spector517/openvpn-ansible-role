@@ -1,0 +1,7 @@
+playbook.yml
+inventory.ini
+ansible.cfg
+ansible.log
+vars
+clients
+easyrsa

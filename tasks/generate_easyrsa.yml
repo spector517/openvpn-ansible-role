@@ -1,0 +1,77 @@
+- block:
+  - name: Install Easy-RSA
+    apt:
+      name: easy-rsa
+      state: present
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: Copy Easy-RSA content
+    copy:
+      src: /usr/share/easy-rsa/
+      dest: '{{ openvpn_easy_rsa_path }}'
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: Add execution rights to easyrsa folder
+    file:
+      path: '{{ openvpn_easy_rsa_path }}/easyrsa'
+      mode: '0700'
+    delegate_to: '{{ openvpn_ca_host }}'
+    when: not ansible_check_mode
+
+  - name: Copy vars to easyrsa folder
+    template:
+      src: easyrsa_vars.j2
+      dest: '{{ openvpn_easy_rsa_path }}/vars'
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: Create PKI
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: ./easyrsa init-pki
+    delegate_to: '{{ openvpn_ca_host }}'
+    when: not ansible_check_mode
+
+  - name: Build CA
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: ./easyrsa build-ca nopass
+    delegate_to: '{{ openvpn_ca_host }}'
+    when: not ansible_check_mode
+
+  - name: Generate servers's key/cert pair
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: './easyrsa build-server-full {{ openvpn_server_cn }} nopass'
+    delegate_to: '{{ openvpn_ca_host }}'
+    when: not ansible_check_mode
+
+  - name: Generate certificate revocation list
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: ./easyrsa gen-crl
+    delegate_to: '{{ openvpn_ca_host }}'
+    when: not ansible_check_mode
+
+  - name: Check ta.key existing status
+    stat:
+      path: '{{ openvpn_easy_rsa_path }}/ta.key'
+    register: ta_key_stat_info
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: Install OpenVPN
+    apt:
+      name: openvpn
+      state: present
+    when: not ta_key_stat_info.stat.exists
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: Generate ta.key
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: openvpn --genkey --secret ta.key
+    when: 
+    - not ta_key_stat_info.stat.exists
+    - not ansible_check_mode
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  tags: ca
