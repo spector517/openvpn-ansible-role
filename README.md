@@ -19,9 +19,9 @@ Do not use this solution for critical systems.
 Tags
 ----
 Use this tags for limit role functionality:
-- "__ca__" - generate the easyrsa folder (if not exists)
-- "__clients__" - generate the clients configs files. You can use that if you want to add new clients for your server (Existing configs will no be overwritten)
-- "__server__" - deploy and configure OpenVPN server
+- "__ovpn-ca__" - generate the easyrsa folder (if not exists)
+- "__ovpn-clients__" - generate the clients configs files. You can use that if you want to add new clients for your server (Existing configs will no be overwritten)
+- "__ovpn-server__" - deploy and configure OpenVPN server
 
 Default - run with __all__ tags.
 
