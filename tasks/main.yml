@@ -4,13 +4,48 @@
   register: easyrsa_stat_info
   delegate_to: '{{ openvpn_ca_host }}'
   run_once: true
-  tags: ovpn-ca
+  tags:
+  - ovpn-clients 
+  - ovpn-server
 
 - name: Create PKI, CA, servers's key/cert pair and OpenVPN ta.key
   include_tasks: generate_easyrsa.yml
   when: not easyrsa_stat_info.stat.exists
   run_once: true
-  tags: ovpn-ca
+  tags:
+  - ovpn-clients
+  - ovpn-server
+  
+- name: Read servers files from CA server
+  shell:
+    chdir: '{{ openvpn_easy_rsa_path }}'
+    cmd: 'cat {{ item }}'
+  loop:
+  - 'pki/ca.crt'
+  - 'ta.key'
+  - 'pki/issued/{{ openvpn_server_cn }}.crt'
+  - 'pki/private/{{ openvpn_server_cn }}.key'
+  - 'pki/crl.pem'
+  loop_control:
+    label: '{{ item }}'
+  register: ovpn_servers_files_values
+  delegate_to: '{{ openvpn_ca_host }}'
+  tags:
+  - ovpn-clients
+  - ovpn-server
+
+- name: Write servers files to variables
+  set_fact:
+    ca_cert_value: '{{ ovpn_servers_files_values.results[0].stdout | trim }}'
+    ta_key_value: '{{ ovpn_servers_files_values.results[1].stdout | trim }}'
+    server_cert_value: '{{ ovpn_servers_files_values.results[2].stdout | trim }}'
+    server_key_value: '{{ ovpn_servers_files_values.results[3].stdout | trim }}'
+    crl_value: '{{ ovpn_servers_files_values.results[4].stdout | trim }}'
+  when: not ansible_check_mode
+  delegate_to: '{{ openvpn_ca_host }}'
+  tags:
+  - ovpn-clients
+  - ovpn-server
 
 - name: Create OpenVPN clients
   include_tasks: create_client.yml

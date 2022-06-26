@@ -20,10 +20,10 @@ openvpn_clients:
 openvpn_ca_host: localhost # !!! Must be in inventory
 
 # TLS configuration
-# CA-storage location
+# CA-storage location on CA server
 openvpn_easy_rsa_path: ~/ovpn-easy-rsa
 
-# Client's ovpn-configs location
+# Client's ovpn-configs location on localhost
 openvpn_clients_path: ~/ovpn-clients
 
 # Server's common name (CN)

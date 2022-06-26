@@ -19,18 +19,40 @@
       state: latest
       update_cache: true
 
-  - name: Copy OpenVPN server's files
+  - name: Copy server certificate
     copy:
-      src: '{{ item }}'
-      dest: /etc/openvpn/server/
+      content: '{{ server_cert_value }}'
+      dest: '/etc/openvpn/server/{{ openvpn_server_cn }}.crt'
       owner: openvpn
       group: openvpn
       mode: '0644'
-    loop:
-    - '{{ openvpn_easy_rsa_path }}/pki/issued/{{ openvpn_server_cn }}.crt'
-    - '{{ openvpn_easy_rsa_path }}/pki/ca.crt'
-    - '{{ openvpn_easy_rsa_path }}/ta.key'
-    - '{{ openvpn_easy_rsa_path }}/pki/crl.pem'
+    when: not ansible_check_mode
+
+  - name: Copy CA certificate
+    copy:
+      content: '{{ ca_cert_value }}'
+      dest: '/etc/openvpn/server/ca.crt'
+      owner: openvpn
+      group: openvpn
+      mode: '0644'
+    when: not ansible_check_mode
+
+  - name: Copy TLS Auth key
+    copy:
+      content: '{{ ta_key_value }}'
+      dest: '/etc/openvpn/server/ta.key'
+      owner: openvpn
+      group: openvpn
+      mode: '0644'
+    when: not ansible_check_mode
+
+  - name: Copy CRL file
+    copy:
+      content: '{{ crl_value }}'
+      dest: '/etc/openvpn/server/crl.pem'
+      owner: openvpn
+      group: openvpn
+      mode: '0644'
     when: not ansible_check_mode
 
   - name: Copy OpenVPN server's config
@@ -43,8 +65,8 @@
 
   - name: Copy server key
     copy:
-      src: '{{ openvpn_easy_rsa_path }}/pki/private/{{ openvpn_server_cn }}.key'
-      dest: /etc/openvpn/server/
+      content: '{{ server_key_value }}'
+      dest: '/etc/openvpn/server/{{ openvpn_server_cn }}.key'
       owner: openvpn
       group: openvpn
       mode: '0400'

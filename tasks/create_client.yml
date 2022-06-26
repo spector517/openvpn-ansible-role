@@ -3,14 +3,14 @@
     file:
       path: '{{ openvpn_clients_path }}'
       state: directory
-    delegate_to: '{{ openvpn_ca_host }}'
+    delegate_to: localhost
     run_once: true
 
   - name: '{{ client_name }} >> Check if already exists'
     stat:
       path: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
     register: client_stat_info
-    delegate_to: '{{ openvpn_ca_host }}'
+    delegate_to: localhost
 
   - name: '{{ client_name }} >> Generate client key/cert pair'
     shell:
@@ -20,13 +20,23 @@
     - not client_stat_info.stat.exists
     - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
-
+  
   - name: '{{ client_name }} >> Read CA cert, client cert, client key and TA key'
+    shell:
+      chdir: '{{ openvpn_easy_rsa_path }}'
+      cmd: 'cat {{ item }}'
+    loop:
+    - 'pki/issued/{{ client_name }}.crt'
+    - 'pki/private/{{ client_name }}.key'
+    loop_control:
+      label: '{{ item }}'
+    register: ovpn_clients_files_values
+    delegate_to: '{{ openvpn_ca_host }}'
+
+  - name: '{{ client_name }} >> Write CA cert, client cert, client key and TA key to variables'
     set_fact:
-      ca_cert_value: "{{ lookup('file', openvpn_easy_rsa_path + '/pki/ca.crt') }}"
-      client_cert_value: "{{ lookup('file', openvpn_easy_rsa_path + '/pki/issued/' + client_name + '.crt') }}"
-      client_key_value: "{{ lookup('file', openvpn_easy_rsa_path + '/pki/private/' + client_name + '.key') }}"
-      ta_key_value: "{{ lookup('file', openvpn_easy_rsa_path + '/ta.key') }}"
+      client_cert_value: '{{ ovpn_clients_files_values.results[0].stdout | trim }}'
+      client_key_value: '{{ ovpn_clients_files_values.results[1].stdout | trim }}'
     when: 
     - not client_stat_info.stat.exists
     - not ansible_check_mode
@@ -40,6 +50,6 @@
     when: 
     - not client_stat_info.stat.exists
     - not ansible_check_mode
-    delegate_to: '{{ openvpn_ca_host }}'
+    delegate_to: localhost
 
   tags: ovpn-clients

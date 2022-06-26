@@ -10,6 +10,9 @@ Remotes:
 - Based on Debian OS
 - Internet connection
 
+Inventory file:
+- localhost must be present
+
 WARNING
 -------
 
@@ -19,14 +22,12 @@ Do not use this solution for critical systems.
 Bugs
 ----
 
-Now only localhost may be used as CA-server
 Removal clients temporary not supported
 
 Tags
 ----
 
 Use this tags for limit role functionality:
-- "__ovpn-ca__" - generate the easyrsa folder (if not exists)
 - "__ovpn-clients__" - generate the clients configs files. You can use that if you want to add new clients for your server (Existing configs will no be overwritten)
 - "__ovpn-server__" - deploy and configure OpenVPN server
 
@@ -58,10 +59,10 @@ openvpn_clients:
 openvpn_ca_host: localhost # !!! Must be in inventory
 
 # TLS configuration
-# CA-storage location
+# CA-storage location on CA server
 openvpn_easy_rsa_path: ~/ovpn-easy-rsa
 
-# Client's ovpn-configs location
+# Client's ovpn-configs location on localhost
 openvpn_clients_path: ~/ovpn-clients
 
 # Server's common name (CN)
@@ -99,10 +100,10 @@ Example Inventory
 your-server.com
 
 [you-ca-server]
-localhost ansible_connection=local
+your-ca-server.com
 
-# [you-ca-server]
-# your-ca-server.com
+[local]
+localhost ansible_connection=local
 ```
 
 Usage
