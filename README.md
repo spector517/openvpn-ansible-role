@@ -19,11 +19,6 @@ WARNING
 All generated TLS-keys in easyrsa folder has no password.
 Do not use this solution for critical systems.
 
-Bugs
-----
-
-Removal clients temporary not supported
-
 Tags
 ----
 
