@@ -5,3 +5,4 @@ ansible.log
 vars
 clients
 easyrsa
+*.DS_Store
