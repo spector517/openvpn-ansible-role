@@ -1,79 +1,86 @@
-- block:
+- name: Generate TLS artifacts
+  block:
   - name: Install Easy-RSA
-    apt:
+    ansible.builtin.apt:
       name: easy-rsa
-      state: present
+      state: latest
+      update_cache: true
     delegate_to: '{{ openvpn_ca_host }}'
 
   - name: Copy Easy-RSA content
-    copy:
+    ansible.builtin.copy:
       src: /usr/share/easy-rsa/
       dest: '{{ openvpn_easy_rsa_path }}'
+      remote_src: true
+      mode: '644'
     delegate_to: '{{ openvpn_ca_host }}'
+    when: not ansible_check_mode
 
-  - name: Add execution rights to easyrsa folder
-    file:
+  - name: Add execution rights to easyrsa bin
+    ansible.builtin.file:
       path: '{{ openvpn_easy_rsa_path }}/easyrsa'
-      mode: '0700'
+      mode: '700'
     delegate_to: '{{ openvpn_ca_host }}'
     when: not ansible_check_mode
 
   - name: Copy vars to easyrsa folder
-    template:
+    ansible.builtin.template:
       src: easyrsa_vars.j2
       dest: '{{ openvpn_easy_rsa_path }}/vars'
+      mode: '644'
     delegate_to: '{{ openvpn_ca_host }}'
 
   - name: Create PKI
-    shell:
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
       cmd: ./easyrsa init-pki
     delegate_to: '{{ openvpn_ca_host }}'
     when: not ansible_check_mode
 
   - name: Build CA
-    shell:
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
       cmd: ./easyrsa build-ca nopass
     delegate_to: '{{ openvpn_ca_host }}'
     when: not ansible_check_mode
 
   - name: Generate servers's key/cert pair
-    shell:
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
       cmd: './easyrsa build-server-full {{ openvpn_server_cn }} nopass'
     delegate_to: '{{ openvpn_ca_host }}'
     when: not ansible_check_mode
 
   - name: Generate certificate revocation list
-    shell:
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
       cmd: ./easyrsa gen-crl
     delegate_to: '{{ openvpn_ca_host }}'
     when: not ansible_check_mode
 
   - name: Check ta.key existing status
-    stat:
+    ansible.builtin.stat:
       path: '{{ openvpn_easy_rsa_path }}/ta.key'
     register: ta_key_stat_info
     delegate_to: '{{ openvpn_ca_host }}'
 
   - name: Install OpenVPN
-    apt:
+    ansible.builtin.apt:
       name: openvpn
-      state: present
+      state: latest
+      update_cache: true
     when: not ta_key_stat_info.stat.exists
     delegate_to: '{{ openvpn_ca_host }}'
 
   - name: Generate ta.key
-    shell:
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
       cmd: openvpn --genkey --secret ta.key
-    when: 
-    - not ta_key_stat_info.stat.exists
-    - not ansible_check_mode
+    when:
+      - not ta_key_stat_info.stat.exists
+      - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
 
-  tags: 
-  - ovpn-clients
-  - ovpn-server
+  tags:
+    - ovpn-clients
+    - ovpn-server

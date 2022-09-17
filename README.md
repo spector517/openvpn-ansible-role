@@ -78,7 +78,7 @@ openvpn_easyrsa_req_ou: Community
 Dependencies
 ------------
 
-None.
+- Ansible community module 'community.general.ufw' must be installed
 
 Example Playbook
 ----------------

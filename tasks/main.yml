@@ -1,61 +1,65 @@
 - name: Check Easy RSA folder status
-  stat:
+  ansible.builtin.stat:
     path: '{{ openvpn_easy_rsa_path }}'
   register: easyrsa_stat_info
   delegate_to: '{{ openvpn_ca_host }}'
   run_once: true
   tags:
-  - ovpn-clients 
-  - ovpn-server
+    - ovpn-clients
+    - ovpn-server
 
 - name: Create PKI, CA, servers's key/cert pair and OpenVPN ta.key
-  include_tasks: generate_easyrsa.yml
+  ansible.builtin.include_tasks: generate_easyrsa.yml
   when: not easyrsa_stat_info.stat.exists
   run_once: true
   tags:
-  - ovpn-clients
-  - ovpn-server
-  
+    - ovpn-clients
+    - ovpn-server
+
 - name: Read servers files from CA server
-  shell:
+  ansible.builtin.command:
     chdir: '{{ openvpn_easy_rsa_path }}'
     cmd: 'cat {{ item }}'
   loop:
-  - 'pki/ca.crt'
-  - 'ta.key'
-  - 'pki/issued/{{ openvpn_server_cn }}.crt'
-  - 'pki/private/{{ openvpn_server_cn }}.key'
-  - 'pki/crl.pem'
+    - 'pki/ca.crt'
+    - 'ta.key'
+    - 'pki/issued/{{ openvpn_server_cn }}.crt'
+    - 'pki/private/{{ openvpn_server_cn }}.key'
+    - 'pki/crl.pem'
   loop_control:
     label: '{{ item }}'
   register: ovpn_servers_files_values
   delegate_to: '{{ openvpn_ca_host }}'
   tags:
-  - ovpn-clients
-  - ovpn-server
+    - ovpn-clients
+    - ovpn-server
+  changed_when: false
+  when: not ansible_check_mode
 
 - name: Write servers files to variables
-  set_fact:
+  ansible.builtin.set_fact:
     ca_cert_value: '{{ ovpn_servers_files_values.results[0].stdout | trim }}'
     ta_key_value: '{{ ovpn_servers_files_values.results[1].stdout | trim }}'
     server_cert_value: '{{ ovpn_servers_files_values.results[2].stdout | trim }}'
     server_key_value: '{{ ovpn_servers_files_values.results[3].stdout | trim }}'
     crl_value: '{{ ovpn_servers_files_values.results[4].stdout | trim }}'
-  when: not ansible_check_mode
   delegate_to: '{{ openvpn_ca_host }}'
   tags:
-  - ovpn-clients
-  - ovpn-server
+    - ovpn-clients
+    - ovpn-server
+  when: not ansible_check_mode
 
 - name: Create OpenVPN clients
-  include_tasks: create_client.yml
+  ansible.builtin.include_tasks: create_client.yml
   vars:
     client_name: '{{ item.name }}'
   loop: '{{ openvpn_clients }}'
   loop_control:
     label: '{{ item.name }}'
-  tags: ovpn-clients
+  tags:
+    - ovpn-clients
 
 - name: Deploy OpenVPN server
-  include_tasks: deploy_ovpn_server.yml
-  tags: ovpn-server
+  ansible.builtin.include_tasks: deploy_ovpn_server.yml
+  tags:
+    - ovpn-server

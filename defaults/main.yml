@@ -10,11 +10,11 @@ openvpn_use_ufw: false
 
 # DNS-servers
 openvpn_dns:
-- 1.1.1.1
+  - 1.1.1.1
 
 # Clients of your Open VPN server
 openvpn_clients:
-- name: client0
+  - name: client0
 
 # Server for you CA-server (May be the same as ovpn-server, but that is not safe!)
 openvpn_ca_host: localhost # !!! Must be in inventory
@@ -30,10 +30,10 @@ openvpn_clients_path: ~/ovpn-clients
 openvpn_server_cn: ovpn-server
 
 # Distinguished Name (CN) of your CA
-openvpn_easyrsa_req_cn: OpenVPN
+openvpn_easyrsa_req_cn: openvpn-server
 openvpn_easyrsa_req_country: RU
-openvpn_easyrsa_req_province: Moscow
-openvpn_easyrsa_req_city: Moscow City
+openvpn_easyrsa_req_province: Default
+openvpn_easyrsa_req_city: Default City
 openvpn_easyrsa_req_org: None
 openvpn_easyrsa_req_email: no@email.net
 openvpn_easyrsa_req_ou: Community

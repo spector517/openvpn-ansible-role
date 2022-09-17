@@ -1,55 +1,61 @@
-- block:
+- name: Create clients
+  block:
   - name: Ensure clients directory is present
-    file:
+    ansible.builtin.file:
       path: '{{ openvpn_clients_path }}'
       state: directory
+      mode: '744'
     delegate_to: localhost
     run_once: true
 
-  - name: '{{ client_name }} >> Check if already exists'
-    stat:
+  - name: Check if '{{ client_name }}' conf already exists
+    ansible.builtin.stat:
       path: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
     register: client_stat_info
     delegate_to: localhost
 
-  - name: '{{ client_name }} >> Generate client key/cert pair'
-    shell:
+  - name: Generate '{{ client_name }}' key/cert pair
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
       cmd: './easyrsa build-client-full {{ client_name }} nopass'
-    when: 
-    - not client_stat_info.stat.exists
-    - not ansible_check_mode
+    when:
+      - not client_stat_info.stat.exists
+      - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
-  
-  - name: '{{ client_name }} >> Read CA cert, client cert, client key and TA key'
-    shell:
+
+  - name: Read '{{ client_name }}' cert and key
+    ansible.builtin.command:
       chdir: '{{ openvpn_easy_rsa_path }}'
-      cmd: 'cat {{ item }}'
+      cmd: 'cat {{ secret }}'
     loop:
-    - 'pki/issued/{{ client_name }}.crt'
-    - 'pki/private/{{ client_name }}.key'
+      - 'pki/issued/{{ client_name }}.crt'
+      - 'pki/private/{{ client_name }}.key'
     loop_control:
-      label: '{{ item }}'
+      loop_var: secret
+      label: '{{ secret }}'
     register: ovpn_clients_files_values
     delegate_to: '{{ openvpn_ca_host }}'
+    changed_when: false
+    when: not ansible_check_mode
 
-  - name: '{{ client_name }} >> Write CA cert, client cert, client key and TA key to variables'
-    set_fact:
+  - name: Write '{{ client_name }}' cert and key to variables
+    ansible.builtin.set_fact:
       client_cert_value: '{{ ovpn_clients_files_values.results[0].stdout | trim }}'
       client_key_value: '{{ ovpn_clients_files_values.results[1].stdout | trim }}'
-    when: 
-    - not client_stat_info.stat.exists
-    - not ansible_check_mode
+    when:
+      - not client_stat_info.stat.exists
+      - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
 
-  - name: '{{ client_name }} >> Create OpenVPN client config file'
-    template:
+  - name: Create OpenVPN config file for '{{ client_name }}'
+    ansible.builtin.template:
       src: client_conf.j2
       dest: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
-      mode: '0600'
-    when: 
-    - not client_stat_info.stat.exists
-    - not ansible_check_mode
+      mode: '600'
+    when:
+      - not client_stat_info.stat.exists
+      - not ansible_check_mode
     delegate_to: localhost
 
-  tags: ovpn-clients
+  tags:
+    - ovpn-clients
