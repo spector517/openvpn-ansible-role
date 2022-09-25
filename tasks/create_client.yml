@@ -13,6 +13,7 @@
       path: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
     register: client_stat_info
     delegate_to: localhost
+    run_once: true
 
   - name: Generate '{{ client_name }}' key/cert pair
     ansible.builtin.command:
@@ -22,6 +23,7 @@
       - not client_stat_info.stat.exists
       - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
+    run_once: true
 
   - name: Read '{{ client_name }}' cert and key
     ansible.builtin.command:
@@ -37,6 +39,7 @@
     delegate_to: '{{ openvpn_ca_host }}'
     changed_when: false
     when: not ansible_check_mode
+    run_once: true
 
   - name: Write '{{ client_name }}' cert and key to variables
     ansible.builtin.set_fact:
@@ -46,6 +49,7 @@
       - not client_stat_info.stat.exists
       - not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
+    run_once: true
 
   - name: Create OpenVPN config file for '{{ client_name }}'
     ansible.builtin.template:
@@ -56,6 +60,7 @@
       - not client_stat_info.stat.exists
       - not ansible_check_mode
     delegate_to: localhost
+    run_once: true
 
   tags:
     - ovpn-clients
