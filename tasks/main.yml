@@ -3,6 +3,9 @@
     path: '{{ openvpn_easy_rsa_path }}'
     state: absent
   when: openvpn_reset_easy_rsa
+  tags:
+    - ovpn-clients
+    - ovpn-server
 
 - name: Check Easy RSA folder status
   ansible.builtin.stat:
@@ -54,6 +57,16 @@
     - ovpn-clients
     - ovpn-server
   when: not ansible_check_mode
+
+- name: Ensure clients directory exists on CA host
+  ansible.builtin.file:
+    path: '{{ openvpn_easy_rsa_path }}/client-configs'
+    state: directory
+    mode: '744'
+  delegate_to: '{{ openvpn_ca_host }}'
+  run_once: true
+  tags:
+   - ovpn-clients
 
 - name: Create OpenVPN clients
   ansible.builtin.include_tasks: create_client.yml

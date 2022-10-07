@@ -1,13 +1,5 @@
 - name: Create clients
   block:
-  - name: Ensure clients directory exists on CA host
-    ansible.builtin.file:
-      path: '{{ openvpn_easy_rsa_path }}/client-configs'
-      state: directory
-      mode: '744'
-    delegate_to: '{{ openvpn_ca_host }}'
-    run_once: true
-
   - name: Ensure clients directory is present on Master host
     ansible.builtin.file:
       path: '{{ openvpn_clients_path }}'
