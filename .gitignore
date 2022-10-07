@@ -6,3 +6,4 @@ vars
 clients
 easyrsa
 *.DS_Store
+.vscode
