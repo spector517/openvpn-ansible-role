@@ -66,7 +66,7 @@
   delegate_to: '{{ openvpn_ca_host }}'
   run_once: true
   tags:
-   - ovpn-clients
+    - ovpn-clients
 
 - name: Create OpenVPN clients
   ansible.builtin.include_tasks: create_client.yml
