@@ -1,3 +1,6 @@
+# Delete currently existing Easy RSA directory
+openvpn_reset_easy_rsa: true
+
 # OpenVPN server configuration
 # Your server url, port and protocol
 openvpn_url: you-vpn-server.com
@@ -24,7 +27,7 @@ openvpn_ca_host: localhost # !!! Must be in inventory
 openvpn_easy_rsa_path: ~/ovpn-easy-rsa
 
 # Client's ovpn-configs location on localhost
-openvpn_clients_path: ~/ovpn-clients
+openvpn_clients_path: ./ovpn-clients
 
 # Server's common name (CN)
 openvpn_server_cn: ovpn-server

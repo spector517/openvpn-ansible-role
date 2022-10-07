@@ -1,3 +1,9 @@
+- name: Delete existing Easy RSA folder
+  ansible.builtin.file:
+    path: '{{ openvpn_easy_rsa_path }}'
+    state: absent
+  when: openvpn_reset_easy_rsa
+
 - name: Check Easy RSA folder status
   ansible.builtin.stat:
     path: '{{ openvpn_easy_rsa_path }}'

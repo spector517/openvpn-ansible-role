@@ -1,6 +1,14 @@
 - name: Create clients
   block:
-  - name: Ensure clients directory is present
+  - name: Ensure clients directory exists on CA host
+    ansible.builtin.file:
+      path: '{{ openvpn_easy_rsa_path }}/client-configs'
+      state: directory
+      mode: '744'
+    delegate_to: '{{ openvpn_ca_host }}'
+    run_once: true
+
+  - name: Ensure clients directory is present on Master host
     ansible.builtin.file:
       path: '{{ openvpn_clients_path }}'
       state: directory
@@ -10,9 +18,9 @@
 
   - name: Check if '{{ client_name }}' conf already exists
     ansible.builtin.stat:
-      path: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
+      path: '{{ openvpn_easy_rsa_path }}/client-configs/{{ client_name }}.ovpn'
     register: client_stat_info
-    delegate_to: localhost
+    delegate_to: '{{ openvpn_ca_host }}'
     run_once: true
 
   - name: Generate '{{ client_name }}' key/cert pair
@@ -45,21 +53,26 @@
     ansible.builtin.set_fact:
       client_cert_value: '{{ ovpn_clients_files_values.results[0].stdout | trim }}'
       client_key_value: '{{ ovpn_clients_files_values.results[1].stdout | trim }}'
-    when:
-      - not client_stat_info.stat.exists
-      - not ansible_check_mode
+    when: not ansible_check_mode
     delegate_to: '{{ openvpn_ca_host }}'
     run_once: true
 
   - name: Create OpenVPN config file for '{{ client_name }}'
     ansible.builtin.template:
       src: client_conf.j2
-      dest: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
+      dest: '{{ openvpn_easy_rsa_path }}/client-configs/{{ client_name }}.ovpn'
       mode: '600'
     when:
       - not client_stat_info.stat.exists
       - not ansible_check_mode
-    delegate_to: localhost
+    delegate_to: '{{ openvpn_ca_host }}'
+    run_once: true
+
+  - name: Fetch '{{ client_name }}' config file to Master host
+    ansible.builtin.fetch:
+      src: '{{ openvpn_easy_rsa_path }}/client-configs/{{ client_name }}.ovpn'
+      dest: '{{ openvpn_clients_path }}/{{ client_name }}.ovpn'
+      flat: true
     run_once: true
 
   tags:
