@@ -34,6 +34,9 @@ Role Variables
 --------------
 
 ```
+# Delete currently existing Easy RSA directory
+openvpn_reset_easy_rsa: false
+
 # OpenVPN server configuration
 # Your server url, port and protocol
 openvpn_url: you-vpn-server.com
