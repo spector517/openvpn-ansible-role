@@ -1,6 +1,6 @@
 galaxy_info:
   role_name: openvpn
-  author: Alexander (SpectoR) Borunov
+  author: Alexander (spector517) Borunov
   description: Deploy simple OpenVPN server and generate clients configs
 
   # If the issue tracker for your role is not on github, uncomment the
