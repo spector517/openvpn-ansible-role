@@ -1,7 +1,7 @@
 - name: Apply sysctl.conf configuration
   ansible.builtin.command:
     cmd: sysctl -p
-  changed_when: sysctl_conf_change_info.changed
+  changed_when: ovpn_sysctl_conf_change_info.changed
   listen: 'openvpn : apply sysctl config'
 
 - name: Reload Uncomplicated Firewall

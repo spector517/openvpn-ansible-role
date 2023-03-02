@@ -10,7 +10,7 @@
 - name: Check Easy RSA folder status
   ansible.builtin.stat:
     path: '{{ openvpn_easy_rsa_path }}'
-  register: easyrsa_stat_info
+  register: ovpn_easyrsa_stat_info
   delegate_to: '{{ openvpn_ca_host }}'
   run_once: true
   tags:
@@ -19,7 +19,7 @@
 
 - name: Create PKI, CA, servers's key/cert pair and OpenVPN ta.key
   ansible.builtin.include_tasks: generate_easyrsa.yml
-  when: not easyrsa_stat_info.stat.exists
+  when: not ovpn_easyrsa_stat_info.stat.exists
   run_once: true
   tags:
     - ovpn-clients

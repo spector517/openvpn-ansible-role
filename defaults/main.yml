@@ -32,6 +32,9 @@ openvpn_clients_path: ./ovpn-clients
 # Server's common name (CN)
 openvpn_server_cn: ovpn-server
 
+# OpenVPN apt package version
+openvpn_package_version: latest
+
 # Distinguished Name (CN) of your CA
 openvpn_easyrsa_req_cn: openvpn-server
 openvpn_easyrsa_req_country: RU

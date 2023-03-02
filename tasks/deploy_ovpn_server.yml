@@ -1,23 +1,10 @@
 - name: Deploy OpenVPN server
+  tags: ovpn-server
   block:
-  - name: Create system group
-    ansible.builtin.group:
-      name: openvpn
-      state: present
-
-  - name: Create system user
-    ansible.builtin.user:
-      name: openvpn
-      group: openvpn
-      system: true
-      create_home: false
-      shell: /sbin/nologin
-      state: present
-
   - name: Install OpenVPN package
     ansible.builtin.apt:
       name: openvpn
-      state: latest
+      state: '{{ openvpn_package_version }}'
       update_cache: true
     notify: 'openvpn : restart service'
 
@@ -25,8 +12,6 @@
     ansible.builtin.copy:
       content: '{{ server_cert_value }}'
       dest: '/etc/openvpn/server/{{ openvpn_server_cn }}.crt'
-      owner: openvpn
-      group: openvpn
       mode: '644'
     when: not ansible_check_mode
     notify: 'openvpn : restart service'
@@ -35,8 +20,6 @@
     ansible.builtin.copy:
       content: '{{ ca_cert_value }}'
       dest: '/etc/openvpn/server/ca.crt'
-      owner: openvpn
-      group: openvpn
       mode: '644'
     when: not ansible_check_mode
     notify: 'openvpn : restart service'
@@ -45,8 +28,6 @@
     ansible.builtin.copy:
       content: '{{ ta_key_value }}'
       dest: '/etc/openvpn/server/ta.key'
-      owner: openvpn
-      group: openvpn
       mode: '644'
     when: not ansible_check_mode
     notify: 'openvpn : restart service'
@@ -55,8 +36,6 @@
     ansible.builtin.copy:
       content: '{{ crl_value }}'
       dest: '/etc/openvpn/server/crl.pem'
-      owner: openvpn
-      group: openvpn
       mode: '644'
     when: not ansible_check_mode
     notify: 'openvpn : restart service'
@@ -65,8 +44,6 @@
     ansible.builtin.template:
       src: server_conf.j2
       dest: /etc/openvpn/server/server.conf
-      owner: openvpn
-      group: openvpn
       mode: '644'
     notify: 'openvpn : restart service'
 
@@ -74,8 +51,6 @@
     ansible.builtin.copy:
       content: '{{ server_key_value }}'
       dest: '/etc/openvpn/server/{{ openvpn_server_cn }}.key'
-      owner: openvpn
-      group: openvpn
       mode: '400'
     when: not ansible_check_mode
     notify: 'openvpn : restart service'
@@ -84,7 +59,7 @@
     ansible.builtin.lineinfile:
       path: /etc/sysctl.conf
       line: net.ipv4.ip_forward = 1
-    register: sysctl_conf_change_info
+    register: ovpn_sysctl_conf_change_info
     notify: 'openvpn : apply sysctl config'
 
   - name: Edit default forward policy
@@ -106,7 +81,7 @@
   - name: Check UFW before.rules
     ansible.builtin.command:
       cmd: cat /etc/ufw/before.rules
-    register: ufw_rules_before_info
+    register: ovpn_ufw_rules_before_info
     check_mode: false
     changed_when: false
     when: openvpn_use_ufw
@@ -119,8 +94,8 @@
       insertbefore: BOF
       state: present
     when:
-      - ('4df7f0a349330e9d68210f3a0c29649e242b206275a47201c824bf0307dfb230' not in ufw_rules_before_info.stdout)
       - openvpn_use_ufw
+      - ('4df7f0a349330e9d68210f3a0c29649e242b206275a47201c824bf0307dfb230' not in ovpn_ufw_rules_before_info.stdout)
     notify: 'openvpn : reload firewall'
 
   - name: Add SSH rule of Uncomplicated Firewall
@@ -140,5 +115,3 @@
       state: enabled
     when: openvpn_use_ufw
     notify: 'openvpn : reload firewall'
-
-  tags: ovpn-server
