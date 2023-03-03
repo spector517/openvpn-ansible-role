@@ -7,4 +7,3 @@ openvpn_url: you-vpn-server.com
 openvpn_clients:
   - name: client0
   - name: client1
-
