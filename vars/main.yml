@@ -1,0 +1,10 @@
+# Most important vars
+
+# Your OpenVPN server url
+openvpn_url: you-vpn-server.com
+
+# Clients of your Open VPN server
+openvpn_clients:
+  - name: client0
+  - name: client1
+

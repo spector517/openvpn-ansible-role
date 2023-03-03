@@ -24,7 +24,7 @@ openvpn_ca_host: localhost # !!! Must be in inventory
 
 # TLS configuration
 # CA-storage location on CA server
-openvpn_easy_rsa_path: ~/ovpn-easy-rsa
+openvpn_easy_rsa_path: ./ovpn-easy-rsa
 
 # Client's ovpn-configs location on localhost
 openvpn_clients_path: ./ovpn-clients
@@ -37,7 +37,7 @@ openvpn_package_version: latest
 
 # Distinguished Name (CN) of your CA
 openvpn_easyrsa_req_cn: openvpn-server
-openvpn_easyrsa_req_country: RU
+openvpn_easyrsa_req_country: US
 openvpn_easyrsa_req_province: Default
 openvpn_easyrsa_req_city: Default City
 openvpn_easyrsa_req_org: None
