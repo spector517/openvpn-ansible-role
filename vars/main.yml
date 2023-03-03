@@ -1,4 +1,4 @@
-# Most important vars
+### Most important vars
 
 # Your OpenVPN server url
 openvpn_url: you-vpn-server.com
