@@ -1,6 +1,3 @@
-# Delete currently existing Easy RSA directory
-openvpn_reset_easy_rsa: false
-
 # OpenVPN server configuration
 # Your server url, port and protocol
 openvpn_url: you-vpn-server.com
@@ -34,6 +31,9 @@ openvpn_server_cn: ovpn-server
 
 # OpenVPN apt package version
 openvpn_package_version: latest
+
+# Delete currently existing Easy RSA directory
+openvpn_reset_easy_rsa: false
 
 # Distinguished Name (CN) of your CA
 openvpn_easyrsa_req_cn: openvpn-server
