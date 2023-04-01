@@ -11,6 +11,7 @@ openvpn_use_ufw: false
 # DNS-servers
 openvpn_dns:
   - 1.1.1.1
+  - 1.0.0.1
 
 # Clients of your Open VPN server
 openvpn_clients:
